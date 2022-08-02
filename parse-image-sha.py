@@ -32,11 +32,11 @@ def main():
     parser.add_argument("registry", nargs="?", default=REGISTRY)
     args = parser.parse_args()
     for m in MANIFESTS:
-        mname = "%s/%s:%s" % (args.registry, m, args.tagname)
+        mname = f"{args.registry}/{m}:{args.tagname}"
         out, err = subprocess.Popen(["docker", "pull", mname], stdout=subprocess.PIPE).communicate()
         outstr = out.decode('UTF-8')
         if err or "Error" in outstr:
-            print("Docker pull hit error - %s, %s" % (err, outstr))
+            print(f"Docker pull hit error - {err}, {outstr}")
             sys.exit(-1)
         maincmd = ["docker", "inspect", "--format='{{index .RepoDigests 0}}'", mname]
         out, err = subprocess.Popen(maincmd, stdout=subprocess.PIPE).communicate()
@@ -45,13 +45,13 @@ def main():
         values = out.decode('UTF-8').split("@")
         sha = values[1].strip().rstrip("'")
         name = values[0].split('/')[-1]
-        print(name + ":")
+        print(f"{name}:")
         print("    \"%s\": [\"%s\"]" % (sha, args.tagname))
-        cmd = "docker manifest inspect " + mname
+        cmd = f"docker manifest inspect {mname}"
         out, err = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE).communicate()
         parsed = json.loads(out)
         for info in parsed["manifests"]:
-            img_name = m + "-" + info["platform"]["architecture"] + ":" + args.tagname
+            img_name = f"{m}-" + info["platform"]["architecture"] + ":" + args.tagname
             print("%s\n    \"%s\": [\"%s\"]" % (img_name, info["digest"], args.tagname))
         print("\n\n")
     print("\n\n")
